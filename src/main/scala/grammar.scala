@@ -14,5 +14,3 @@ enum Body:
 enum Instruction:
   case PrimOp(op: String, ops: List[Value])
   case Control(x: Value.Variable, b: Body)
-  
-//case class State(body: Body, )

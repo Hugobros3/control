@@ -11,13 +11,13 @@ def substitute(i: Instruction, s: Variable, w: Value): Instruction = i match {
   case PrimOp(op, ops) => PrimOp(op, ops.map(vn => substitute(vn, s, w)))
   case Control(x, b) => assert(x != s); Control(x, substitute(b, s, w))
 }
-case class Ctx(jps: List[Variable])
-def step(p: Body, ctx: Ctx = Ctx(List())): Body = p match {
+case class Context(jps: List[Variable])
+def step(p: Body, ctx: Context = Context(List())): Body = p match {
   case TailCall(Variable(0), v) => throw Exception(s"done, final result: $v")
   case TailCall(Label(Fn(x, b)), v) => substitute(b, x, v) // beta-reduction
   case Let(x, Control(j1, TailCall(j2, y)), b) if j1 == j2 => substitute(b, x, y) // join immediate
   case Let(x, Control(_, TailCall(j2, y)), b) => assert(ctx.jps.contains(j2)); TailCall(j2, y) // join non-immediate
-  case Let(x, Control(j, b), t) => Let(x, Control(j, step(b, Ctx(ctx.jps ++ List(j)))), t) // step in control
+  case Let(x, Control(j, b), t) => Let(x, Control(j, step(b, Context(ctx.jps ++ List(j)))), t) // step in control
   case Let(x, PrimOp("add", List(Constant(l), Constant(r))), b) => substitute(b, x, Constant(l + r)) // add
   case Let(x, PrimOp(op, _), b) => throw Exception(s"unimplemented prim op $op")
   case _ => throw Exception("stuck")
